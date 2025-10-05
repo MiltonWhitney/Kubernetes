@@ -1,0 +1,13 @@
+ansible/
+├── inventory.ini
+├── playbooks/
+│   ├── docker-swarm.yml
+│   ├── k8s-cluster.yml
+│   ├── roles/
+│   │   ├── common/         # shared tasks (packages, hostname, sysctl)
+│   │   ├── docker/         # install Docker / containerd
+│   │   ├── swarm/          # init swarm, join workers, deploy services
+│   │   ├── k8s-common/     # kubeadm/kubelet/kubectl install
+│   │   ├── k8s-master/     # kubeadm init, CNI plugin
+│   │   ├── k8s-worker/     # kubeadm join workers
+│   │   └── kompose/        # optional: convert docker-compose → k8s

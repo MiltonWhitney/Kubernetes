@@ -1,0 +1,17 @@
+- hosts: all
+  become: yes
+  roles:
+    - common
+    - docker   # or containerd role
+
+- hosts: k8s_master
+  become: yes
+  roles:
+    - k8s-common
+    - k8s-master
+
+- hosts: k8s_workers
+  become: yes
+  roles:
+    - k8s-common
+    - k8s-worker

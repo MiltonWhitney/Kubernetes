@@ -1,0 +1,57 @@
+---
+- name: Configure and Install Docker on Linux hosts
+  hosts: all
+  become: yes # Use sudo/root privileges
+  gather_facts: yes # Ensure facts are gathered
+
+  tasks:
+    - name: Install dependencies (shared)
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - policycoreutils-python-utils
+        - yum-utils # Common utilities for RHEL-based systems
+        - device-mapper-persistent-data
+      when: ansible_os_family == 'RedHat'
+
+    # --- Amazon Linux 2 Specific Tasks ---
+    - name: Install Docker on Amazon Linux (using amazon-linux-extras)
+      ansible.builtin.command: amazon-linux-extras install docker -y
+      when: ansible_distribution == 'Amazon'
+      # Register the result to see if it changed, though 'command' doesn't guarantee idempotency
+
+    # --- Red Hat/RHEL/CentOS Specific Tasks ---
+    - name: Add Docker stable repository for RedHat-like systems
+      ansible.builtin.yum_repository:
+        name: docker-ce
+        description: Docker CE Stable - $basearch
+        baseurl: https://download.docker.com/linux/centos/{{ ansible_facts['distribution_major_version'] }}/x86_64/stable/
+        gpgcheck: yes
+        gpgkey: https://download.docker.com/linux/centos/gpg
+      when: ansible_distribution != 'Amazon' and ansible_os_family == 'RedHat'
+
+    - name: Install Docker CE and related packages on RedHat-like systems
+      ansible.builtin.package:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+        disable_excludes: 'docker' # Important for RHEL/CentOS to avoid conflicts
+      when: ansible_distribution != 'Amazon' and ansible_os_family == 'RedHat'
+
+    # --- Shared Service Management Tasks ---
+    - name: Ensure Docker service is running and enabled
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: yes
+      # This task should run on both Amazon and RedHat after installation
+
+    - name: Add remote user to the docker group (optional but highly recommended)
+      ansible.builtin.user:
+        name: "{{ ansible_user | default(omit) }}" # Use the connecting user, or omit if not set
+        groups: docker
+        append: yes
+      when: ansible_user is defined # Only run if Ansible knows the user

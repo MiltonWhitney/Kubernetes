@@ -1,0 +1,8 @@
+- name: Install Docker (official convenience script)
+  shell: curl -fsSL https://get.docker.com | sh
+
+- name: Enable and start Docker
+  systemd:
+    name: docker
+    enabled: yes
+    state: started

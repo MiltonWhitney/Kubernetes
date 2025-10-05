@@ -1,0 +1,10 @@
+- hosts: all
+  become: yes
+  roles:
+    - common
+    - docker
+
+- hosts: manager
+  become: yes
+  roles:
+    - swarm

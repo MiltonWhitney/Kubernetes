@@ -1,0 +1,14 @@
+- name: Init Docker Swarm on manager
+  shell: docker swarm init --advertise-addr {{ ansible_host }}
+  when: inventory_hostname in groups['manager']
+  register: swarm_init
+
+- name: Get join token
+  shell: docker swarm join-token -q worker
+  when: inventory_hostname in groups['manager']
+  register: swarm_token
+  run_once: true
+
+- name: Join worker nodes to swarm
+  shell: docker swarm join --token {{ hostvars['manager']['swarm_token'].stdout }} {{ hostvars['manager']['ansible_host'] }}:2377
+  when: inventory_hostname in groups['workers']
